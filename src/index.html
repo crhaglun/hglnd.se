@@ -125,6 +125,111 @@
         filter: brightness(0) invert(1);
       }
 
+      /* Status section */
+      .status-section {
+        margin-top: 4rem;
+        padding-top: 3rem;
+        border-top: 1px solid var(--color-border);
+      }
+
+      .status-section h2 {
+        font-family: 'Audiowide', cursive;
+        font-size: 1.5rem;
+        font-weight: 400;
+        text-align: center;
+        margin-bottom: 2rem;
+        color: var(--color-text-muted);
+      }
+
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+      }
+
+      .status-card {
+        background: rgba(26, 26, 36, 0.6);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: border-color 0.2s ease;
+      }
+
+      .status-card:hover {
+        border-color: rgba(99, 102, 241, 0.3);
+      }
+
+      .status-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--color-text-muted);
+        flex-shrink: 0;
+      }
+
+      .status-indicator.online {
+        background: #22c55e;
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+      }
+
+      .status-indicator.offline {
+        background: #ef4444;
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+      }
+
+      .status-indicator.checking {
+        background: var(--color-primary);
+        animation: pulse-status 1.5s infinite;
+      }
+
+      @keyframes pulse-status {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+
+      .status-host {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--color-text);
+      }
+
+      .status-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+      }
+
+      .status-detail {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .status-detail-label {
+        opacity: 0.7;
+      }
+
+      .status-detail-value {
+        text-align: right;
+      }
+
+      .status-detail-value.warning {
+        color: #fbbf24;
+      }
+
+      .status-detail-value.error {
+        color: #ef4444;
+      }
+
       footer {
         border-top: 1px solid var(--color-border);
         padding: 2rem;
@@ -164,10 +269,96 @@
           GitHub profile
         </a>
       </section>
+
+      <section class="status-section">
+        <h2>Service Status</h2>
+        <div class="status-grid" id="status-grid">
+          <!-- Status cards populated by JavaScript -->
+        </div>
+      </section>
     </main>
 
     <footer>
       <p>© 2026 hglnd.se · Hosted on <a href="https://pages.github.com/" target="_blank" rel="noopener noreferrer">GitHub Pages</a></p>
     </footer>
+
+    <script>
+      const SSL_CHECKER_URL = 'https://ssl-checker.hglnd.deno.net';
+      const HOSTS = ['hglnd.se', 'www.hglnd.se', 'api.hglnd.se'];
+
+      function createStatusCard(host) {
+        return `
+          <div class="status-card" id="status-${host.replace(/\./g, '-')}">
+            <div class="status-card-header">
+              <div class="status-indicator checking"></div>
+              <span class="status-host">${host}</span>
+            </div>
+            <div class="status-details">
+              <div class="status-detail">
+                <span class="status-detail-label">Status</span>
+                <span class="status-detail-value">Checking...</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function updateStatusCard(host, data) {
+        const cardId = `status-${host.replace(/\./g, '-')}`;
+        const card = document.getElementById(cardId);
+        if (!card) return;
+
+        const isOnline = data.status === 'online';
+        const indicator = card.querySelector('.status-indicator');
+        indicator.className = `status-indicator ${isOnline ? 'online' : 'offline'}`;
+
+        let detailsHtml = `
+          <div class="status-detail">
+            <span class="status-detail-label">Status</span>
+            <span class="status-detail-value">${isOnline ? 'Online' : data.error || 'Offline'}</span>
+          </div>
+        `;
+
+        if (isOnline && data.certificate) {
+          const daysClass = data.certificate.daysRemaining < 7 ? 'error' : 
+                           data.certificate.daysRemaining < 30 ? 'warning' : '';
+          detailsHtml += `
+            <div class="status-detail">
+              <span class="status-detail-label">Issuer</span>
+              <span class="status-detail-value">${data.certificate.issuer}</span>
+            </div>
+            <div class="status-detail">
+              <span class="status-detail-label">Expires</span>
+              <span class="status-detail-value ${daysClass}">${data.certificate.daysRemaining} days</span>
+            </div>
+          `;
+        }
+
+        if (isOnline && data.responseTimeMs) {
+          detailsHtml += `
+            <div class="status-detail">
+              <span class="status-detail-label">Response</span>
+              <span class="status-detail-value">${data.responseTimeMs}ms</span>
+            </div>
+          `;
+        }
+
+        card.querySelector('.status-details').innerHTML = detailsHtml;
+      }
+
+      async function checkHost(host) {
+        try {
+          const response = await fetch(`${SSL_CHECKER_URL}/?host=${encodeURIComponent(host)}`);
+          const data = await response.json();
+          updateStatusCard(host, data);
+        } catch (err) {
+          updateStatusCard(host, { status: 'error', error: 'Check failed' });
+        }
+      }
+
+      // Initialize
+      document.getElementById('status-grid').innerHTML = HOSTS.map(createStatusCard).join('');
+      HOSTS.forEach(checkHost);
+    </script>
   </body>
 </html>

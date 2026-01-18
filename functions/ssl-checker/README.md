@@ -12,12 +12,12 @@ A Deno Deploy function that checks HTTPS status and full certificate details for
 
 4. Deploy!
 
-Your function will be available at: `https://<project-name>.deno.dev/`
+See the deno dashboard for worker URL location
 
 ## Usage
 
 ```
-GET https://<project-name>.deno.dev/?host=example.com
+GET https://<project-name>.deno.net/?host=example.com
 ```
 
 ### Response

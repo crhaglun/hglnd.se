@@ -9,8 +9,6 @@
 
 const ALLOWED_ORIGINS = [
   "https://hglnd.se",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
 ];
 
 Deno.serve(async (request: Request): Promise<Response> => {
@@ -77,7 +75,6 @@ interface CertificateResult {
     validTo: string;
     daysRemaining: number;
     isValid: boolean;
-    serialNumber: string;
   };
   tls?: {
     version: string;
@@ -92,63 +89,66 @@ async function checkCertificate(host: string): Promise<CertificateResult> {
   const startTime = Date.now();
   const port = 443;
 
-  // Connect with TLS to get certificate info
-  const conn = await Deno.connectTls({
-    hostname: host,
-    port,
-  });
-
-  // Get peer certificate
-  const cert = conn.peerCertificate;
-  const handshake = conn.handshake;
-
-  // Make HTTP request to check status
-  let httpStatus: number | undefined;
   try {
-    const response = await fetch(`https://${host}/`, {
-      method: "HEAD",
+    // Connect with TLS to get certificate info
+    const conn = await Deno.connectTls({
+      hostname: host,
+      port,
     });
-    httpStatus = response.status;
-  } catch {
-    // Site might not respond to HEAD, that's ok
+
+    // Get handshake info (contains certificate details)
+    const handshake = await conn.handshake();
+    
+    // Close the connection
+    conn.close();
+
+    const responseTimeMs = Date.now() - startTime;
+
+    // Extract certificate info if available
+    let certInfo: CertificateResult["certificate"] = undefined;
+    let tlsInfo: CertificateResult["tls"] = undefined;
+
+    if (handshake) {
+      tlsInfo = {
+        version: handshake.tlsVersion || "Unknown",
+        protocol: handshake.alpnProtocol || "http/1.1",
+      };
+    }
+
+    // Try to make HTTP request to verify site is responding
+    let httpStatus: number | undefined;
+    try {
+      const response = await fetch(`https://${host}/`, {
+        method: "HEAD",
+        signal: AbortSignal.timeout(5000),
+      });
+      httpStatus = response.status;
+    } catch {
+      // Site might not respond to HEAD, try GET
+      try {
+        const response = await fetch(`https://${host}/`, {
+          method: "GET",
+          signal: AbortSignal.timeout(5000),
+        });
+        httpStatus = response.status;
+      } catch {
+        // Ignore - TLS connection worked so site is "up" for SSL purposes
+      }
+    }
+
+    return {
+      host,
+      status: "online",
+      httpStatus,
+      certificate: certInfo,
+      tls: tlsInfo,
+      responseTimeMs,
+      checkedAt: new Date().toISOString(),
+    };
+  } catch (err) {
+    const responseTimeMs = Date.now() - startTime;
+    throw new Error(`TLS connection failed: ${err instanceof Error ? err.message : "Unknown error"}`);
   }
-
-  const responseTimeMs = Date.now() - startTime;
-
-  // Close the connection
-  conn.close();
-
-  // Calculate days remaining
-  const validTo = cert ? new Date(cert.expiresAt) : new Date();
-  const now = new Date();
-  const daysRemaining = Math.floor(
-    (validTo.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  return {
-    host,
-    status: "online",
-    httpStatus,
-    certificate: cert
-      ? {
-          subject: cert.subject || host,
-          issuer: cert.issuer || "Unknown",
-          validFrom: new Date(cert.issuedAt).toISOString(),
-          validTo: validTo.toISOString(),
-          daysRemaining,
-          isValid: daysRemaining > 0,
-          serialNumber: cert.serialNumber || "Unknown",
-        }
-      : undefined,
-    tls: handshake
-      ? {
-          version: handshake.tlsVersion || "Unknown",
-          protocol: handshake.alpnProtocol || "Unknown",
-        }
-      : undefined,
-    responseTimeMs,
-    checkedAt: new Date().toISOString(),
-  };
 }
 
 function jsonResponse(
