@@ -1,9 +1,173 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>First publish</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hglnd.se</title>
+    <meta name="description" content="Personal projects and experiments.">
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#6366f1">
+    
+    <!-- SEO -->
+    <link rel="canonical" href="https://hglnd.se/">
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hglnd.se/">
+    <meta property="og:title" content="hglnd.se">
+    <meta property="og:description" content="Personal projects and experiments.">
+    <meta name="twitter:card" content="summary">
+    
+    <!-- Privacy-friendly fonts from Bunny Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link rel="preload" href="https://fonts.bunny.net/css?family=audiowide:400|space-grotesk:400,600" as="style">
+    <link href="https://fonts.bunny.net/css?family=audiowide:400|space-grotesk:400,600" rel="stylesheet">
+    
+    <style>
+      *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --color-primary: #6366f1;
+        --color-secondary: #8b5cf6;
+        --color-bg: #0f0f13;
+        --color-text: #e4e4e7;
+        --color-text-muted: #a1a1aa;
+        --color-border: #27272a;
+      }
+
+      body {
+        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--color-bg);
+        color: var(--color-text);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100vh;
+        background: 
+          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
+          radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.08), transparent);
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      main {
+        flex: 1;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+        width: 100%;
+      }
+
+      .hero {
+        text-align: center;
+        padding: 4rem 0 6rem;
+      }
+
+      h1 {
+        font-family: 'Audiowide', cursive;
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        font-weight: 400;
+        line-height: 1.3;
+        padding-bottom: 0.1em;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, var(--color-text) 0%, var(--color-text-muted) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .hero-subtitle {
+        font-size: 1.25rem;
+        color: var(--color-text-muted);
+        max-width: 600px;
+        margin: 0 auto 3rem;
+      }
+
+      .cta-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+        color: white;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 20px -4px rgba(99, 102, 241, 0.5);
+      }
+
+      .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px -4px rgba(99, 102, 241, 0.6);
+      }
+
+      .cta-button .github-icon {
+        filter: brightness(0) invert(1);
+      }
+
+      footer {
+        border-top: 1px solid var(--color-border);
+        padding: 2rem;
+        text-align: center;
+        color: var(--color-text-muted);
+        font-size: 0.875rem;
+      }
+
+      footer a {
+        color: var(--color-primary);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      footer a:hover {
+        color: var(--color-secondary);
+      }
+
+      @media (max-width: 768px) {
+        main {
+          padding: 2rem 1.5rem;
+        }
+
+        .hero {
+          padding: 2rem 0 4rem;
+        }
+      }
+    </style>
   </head>
   <body>
-    <p>First publish from custom Github Action</p>
+    <main>
+      <section class="hero">
+        <h1>hglnd.se</h1>
+        <p class="hero-subtitle">Personal projects and experiments.</p>
+        <a href="https://github.com/crhaglun" class="cta-button" target="_blank" rel="noopener noreferrer">
+          <img src="https://cdn.jsdelivr.net/npm/@primer/octicons@19/build/svg/mark-github-16.svg" alt="" width="20" height="20" loading="lazy" class="github-icon">
+          GitHub profile
+        </a>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2026 hglnd.se · Hosted on <a href="https://pages.github.com/" target="_blank" rel="noopener noreferrer">GitHub Pages</a></p>
+    </footer>
   </body>
 </html>
